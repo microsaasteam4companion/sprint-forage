@@ -3,12 +3,12 @@ import { getAuth, GithubAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC2ZvIF8Ckq-r-xI1tRg11GbhfD0hiAMc0",
-  authDomain: "sprintforge-3385f.firebaseapp.com",
-  projectId: "sprintforge-3385f",
-  storageBucket: "sprintforge-3385f.firebasestorage.app",
-  messagingSenderId: "291643082524",
-  appId: "1:291643082524:web:334fe3959093c0d6b61cd9"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
