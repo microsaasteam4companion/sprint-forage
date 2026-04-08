@@ -11,7 +11,7 @@ export const octokit = new Octokit({
  * Automates the creation of a team repository and adds users as collaborators.
  * (Phase 1: PAT-based Automation)
  */
-export const provisionTeamRepo = async (repoName: string, members: string[]) => {
+export const provisionTeamRepo = async (repoName: string, members: string[], brief: any) => {
   if (!GITHUB_TOKEN) {
     throw new Error("GitHub Token (PAT) is missing in environment variables.");
   }
@@ -23,7 +23,7 @@ export const provisionTeamRepo = async (repoName: string, members: string[]) => 
       name: repoName,
       private: true,
       auto_init: true,
-      description: `Sprintforge project repository for team workspace`
+      description: `Sprintforge: ${brief.name} - ${brief.desc}`
     });
 
     // 2. Add members as collaborators
@@ -35,6 +35,35 @@ export const provisionTeamRepo = async (repoName: string, members: string[]) => 
         permission: "push",
       });
     }
+
+    // 3. Push initial README with Project Brief
+    const readmeContent = `
+# 🚀 ${brief.name}
+> ${brief.desc}
+
+## 🎯 The Problem
+${brief.problem}
+
+## 💡 Expected Outcome
+${brief.expectedOutcome}
+
+## 🛠 Tech Stack
+${brief.techStack?.map((t: string) => `\`${t}\``).join(", ")}
+
+## ✅ Success Criteria
+${brief.successCriteria}
+
+---
+Forged by **${brief.teamName}** @ Sprintforge
+    `;
+
+    await octokit.repos.createOrUpdateFileContents({
+      owner: GITHUB_ORG,
+      repo: repoName,
+      path: "README.md",
+      message: "chore: initial documentation pulse [Sprintforge]",
+      content: btoa(readmeContent),
+    });
 
     return repo.html_url;
   } catch (error) {

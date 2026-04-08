@@ -23,12 +23,55 @@ const PricingSection = () => {
         </p>
       </div>
 
-      <div className="container px-4 mx-auto flex justify-center relative z-10">
+      <div className="container px-4 mx-auto flex flex-col md:flex-row justify-center items-stretch gap-8 relative z-10">
+        {/* Free Plan */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="glass max-w-md w-full rounded-3xl p-8 border-primary/30 shadow-glow relative overflow-hidden group"
+          className="glass max-w-sm w-full rounded-3xl p-8 border-border/30 hover:border-primary/20 transition-colors flex flex-col"
+        >
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold mb-2 text-foreground/70">Standard Forge</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-5xl font-black text-foreground">$0</span>
+              <span className="text-muted-foreground font-mono">/forever</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Perfect for solo engineers looking for a team.</p>
+          </div>
+
+          <div className="space-y-4 mb-10 flex-grow">
+            {[
+              "Standard Team Matchmaking",
+              "Weekly Project Dashboard",
+              "Public Profile & Portfolio",
+              "Community Discord Access",
+              "Standard Submission Review",
+            ].map((perk, i) => (
+              <div key={i} className="flex items-center gap-3 text-sm text-foreground/60">
+                <div className="w-5 h-5 rounded-full bg-border/20 flex items-center justify-center">
+                  <Check className="w-3 h-3 text-muted-foreground" />
+                </div>
+                {perk}
+              </div>
+            ))}
+          </div>
+
+          <Button 
+            variant="outline"
+            className="w-full border-border/50 hover:bg-primary/5 text-foreground font-bold text-lg h-14 rounded-2xl transition-all"
+            onClick={() => window.open("/dashboard", "_self")}
+          >
+            START FOR FREE
+          </Button>
+        </motion.div>
+
+        {/* Paid Plan */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="glass max-w-sm w-full rounded-3xl p-8 border-primary/30 shadow-glow relative overflow-hidden group flex flex-col"
         >
           <div className="absolute top-0 right-0 p-4">
              <div className="bg-primary/20 text-primary px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border border-primary/40 animate-pulse">
@@ -39,13 +82,13 @@ const PricingSection = () => {
           <div className="mb-8">
             <h3 className="text-2xl font-bold mb-2">Verified Gold</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-5xl font-black text-foreground">$99</span>
+              <span className="text-5xl font-black text-foreground">$10</span>
               <span className="text-muted-foreground font-mono">/one-time</span>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Lifetime access to the elite Forge ecosystem.</p>
           </div>
 
-          <div className="space-y-4 mb-10">
+          <div className="space-y-4 mb-10 flex-grow">
             {perks.map((perk, i) => (
               <div key={i} className="flex items-center gap-3 text-sm text-foreground/80 group-hover:translate-x-1 transition-transform">
                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">

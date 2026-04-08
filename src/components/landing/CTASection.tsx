@@ -26,7 +26,7 @@ const CTASection = () => {
             </p>
             <Link to="/dashboard">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 glow-primary font-bold text-base px-10 py-6 group">
-                Join ForgeTeam
+                Join SprintForge
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>

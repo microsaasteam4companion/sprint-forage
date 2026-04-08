@@ -15,11 +15,9 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center glow-primary">
-            <span className="font-mono font-bold text-primary text-sm">FT</span>
-          </div>
+          <img src="/logo.png" alt="SprintForge Logo" className="w-8 h-8 rounded-lg glow-primary" />
           <span className="font-bold text-lg tracking-tight text-foreground">
-            Forge<span className="text-primary">Team</span>
+            Sprint<span className="text-primary">Forge</span>
           </span>
         </Link>
 

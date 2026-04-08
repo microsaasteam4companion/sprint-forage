@@ -8,7 +8,7 @@ const testimonials = [
     badge: "🔥 12-week streak",
   },
   {
-    text: "Three companies reached out to me after seeing my Karma score and shipped projects. ForgeTeam is my resume now.",
+    text: "Three companies reached out to me after seeing my Karma score and shipped projects. SprintForge is my resume now.",
     author: "███████",
     karma: 8400,
     badge: "💼 Hired via Forge",
@@ -21,12 +21,7 @@ const testimonials = [
   },
 ];
 
-const counters = [
-  { value: "47", label: "Countries", suffix: "" },
-  { value: "94", label: "Avg. completion rate", suffix: "%" },
-  { value: "3.2", label: "Avg team rating", suffix: "/5" },
-  { value: "12", label: "Recruiters active", suffix: "+" },
-];
+
 
 const SocialProofSection = () => {
   return (
@@ -67,29 +62,7 @@ const SocialProofSection = () => {
           ))}
         </div>
 
-        {/* Counter strip */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="glass rounded-2xl p-8 grid grid-cols-2 md:grid-cols-4 gap-8"
-        >
-          {counters.map((c, i) => (
-            <motion.div
-              key={c.label}
-              initial={{ scale: 0.5, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, type: "spring" }}
-              className="text-center"
-            >
-              <div className="text-3xl md:text-4xl font-black font-mono text-primary">
-                {c.value}<span className="text-lg text-muted-foreground">{c.suffix}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{c.label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+
       </div>
     </section>
   );

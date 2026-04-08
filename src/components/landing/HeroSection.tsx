@@ -19,15 +19,7 @@ const HeroSection = () => {
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           {/* Left: Text */}
           <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-primary/20 mb-8"
-            >
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
-              <span className="text-xs font-mono text-primary">SEASON 4 LIVE — 2,847 ENGINEERS FORGING</span>
-            </motion.div>
+
 
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -64,29 +56,9 @@ const HeroSection = () => {
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 px-8 py-6">
-                Watch Demo
-              </Button>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="grid grid-cols-3 max-w-md gap-8"
-            >
-              {[
-                { icon: Users, value: "12K+", label: "Engineers" },
-                { icon: Shuffle, value: "3.2K", label: "Teams Forged" },
-                { icon: Trophy, value: "890", label: "Projects Shipped" },
-              ].map(({ icon: Icon, value, label }) => (
-                <div key={label} className="text-center sm:text-left">
-                  <Icon className="w-4 h-4 text-primary mx-auto sm:mx-0 mb-2" />
-                  <div className="text-2xl font-bold text-foreground font-mono">{value}</div>
-                  <div className="text-xs text-muted-foreground">{label}</div>
-                </div>
-              ))}
-            </motion.div>
+
           </div>
 
           {/* Right: Globe */}

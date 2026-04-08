@@ -9,6 +9,7 @@ import LeaderboardPreview from "@/components/landing/LeaderboardPreview";
 import CTASection from "@/components/landing/CTASection";
 import PricingSection from "@/components/landing/PricingSection";
 import Footer from "@/components/landing/Footer";
+import UpvoteWidget from "@/components/landing/UpvoteWidget";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,6 +37,7 @@ const Index = () => {
       <PricingSection />
       <CTASection />
       <Footer />
+      <UpvoteWidget userId={user?.uid} email={user?.email || undefined} />
     </div>
   );
 };

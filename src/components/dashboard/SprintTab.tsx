@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Clock, CheckCircle2, Circle, AlertTriangle, GitBranch,
+  Clock, CheckCircle2, Circle, AlertTriangle, GitBranch, Rocket,
   MessageSquare, Send, Paperclip, ExternalLink, Zap,
-  Code2, Palette, Database as DbIcon, MoreHorizontal
+  Code2, Palette, Database as DbIcon, MoreHorizontal, Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -33,6 +33,12 @@ const SprintTab = ({ profile, user }: { profile: any, user: any }) => {
   const [submitting, setSubmitting] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: "", priority: "medium" });
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submissionData, setSubmissionData] = useState({
+    deployUrl: "",
+    approaches: "",
+    challenges: ""
+  });
 
   useEffect(() => {
     const uid = profile?.uid || user?.uid;
@@ -110,38 +116,46 @@ const SprintTab = ({ profile, user }: { profile: any, user: any }) => {
     await updateDoc(doc(db, "teams", team.id, "tasks", taskId), { status: nextStatus });
   };
 
-  const submitProject = async () => {
+  const startSubmission = () => {
     if (!team || submitting) return;
+    setShowSubmitModal(true);
+  };
+
+  const handleFinalSubmission = async () => {
+    if (!submissionData.deployUrl || !submissionData.deployUrl.includes("http")) {
+       toast.error("Valid live URL is required!");
+       return;
+    }
     
-    // 1. Proof of Work Check
     setSubmitting(true);
     try {
-      // Extract repo name from URL (e.g. from https://github.com/org/sprint-abc)
       const repoName = team.repoUrl.split("/").pop();
       toast.info("Step 1/3: Verifying Proof of Work on GitHub...");
-      const commitsCount = await checkRepoCommits(repoName);
       
-      console.log("Verified Commits:", commitsCount);
-      if (commitsCount < 5) {
-        toast.error(`Submission Rejected: Only ${commitsCount} commits found. Need at least 5!`, {
-          description: "Keep forging! Pushing zero/empty code is bad for your Karma."
-        });
-        setSubmitting(false);
-        return;
+      let commitsCount = 0;
+      try {
+        commitsCount = await checkRepoCommits(repoName);
+      } catch (err) {
+        console.warn("GitHub API Check Failed", err);
+      }
+      
+      if (commitsCount < 10) {
+         toast.error(`Submission Rejected: Only ${commitsCount} commits found. Need at least 10 valid commits!`);
+         setSubmitting(false);
+         return;
       }
 
-      if (!confirm(`Success! Verified ${commitsCount} commits. Finish sprint and claim +500 Karma?`)) {
-        setSubmitting(false);
-        return;
-      }
-
-      // 2. Update Team Status
+      // 2. Update Team Status & Attach Deploy URL + Journey
       await updateDoc(doc(db, "teams", team.id), { 
         status: "completed",
-        submittedAt: serverTimestamp()
+        submittedAt: serverTimestamp(),
+        deployUrl: submissionData.deployUrl,
+        approaches: submissionData.approaches,
+        challenges: submissionData.challenges
       });
       
-      // 3. Reward teammates (+500 Karma each) and set cooldown
+      // 3. Reward teammates (+500 Karma each) and update Streak/Heatmap array
+      const todayISO = new Date().toISOString();
       for (const memberUid of team.members) {
         const userRef = doc(db, "users", memberUid);
         await runTransaction(db, async (transaction) => {
@@ -149,15 +163,19 @@ const SprintTab = ({ profile, user }: { profile: any, user: any }) => {
           if (!userDoc.exists()) return;
           const currentKarma = userDoc.data().karma || 0;
           const currentProjects = userDoc.data().projectsCount || 0;
+          const currentStreak = userDoc.data().streak || 0;
+          const completedDates = userDoc.data().completedProjectDates || [];
+          
           transaction.update(userRef, { 
             karma: currentKarma + 500,
             projectsCount: currentProjects + 1,
-            lastSprintSubmittedAt: serverTimestamp() // Mandatory Cooldown Trigger
+            streak: currentStreak + 1,
+            completedProjectDates: [...completedDates, todayISO],
           });
         });
       }
       
-      toast.success("Golden Sprint! +500 Karma added to all teammates.");
+      toast.success("Golden Sprint! +10 Valid Commits tracked. +500 Karma added to all teammates.");
     } catch (e) {
       console.error(e);
       toast.error("Submission failed.");
@@ -207,7 +225,7 @@ const SprintTab = ({ profile, user }: { profile: any, user: any }) => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Zap className="w-4 h-4 text-primary" />
-                <span className="font-mono text-xs text-primary uppercase tracking-widest">Active Team Sprint</span>
+                <span className="font-mono text-xs text-primary uppercase tracking-widest">{team.forgeTeamName || "Active Squad"}</span>
               </div>
               <h2 className="text-xl font-bold text-foreground">{team.projectName || "New Sprint Project"}</h2>
               <p className="text-sm text-muted-foreground mt-1 max-w-xl">{team.description}</p>
@@ -222,11 +240,10 @@ const SprintTab = ({ profile, user }: { profile: any, user: any }) => {
                 <GitBranch className="w-4 h-4" /> REPOSITORY
               </a>
               <Button 
-                onClick={submitProject} 
-                disabled={submitting || team.status === "completed"} 
+                onClick={startSubmission} 
                 className="bg-primary text-primary-foreground hover:glow-primary font-bold shadow-glow"
               >
-                {submitting ? "Submitting..." : team.status === "completed" ? "Submitted" : "Submit Project"} 
+                Submit Project
                 <ExternalLink className="w-3 h-3 ml-1" />
               </Button>
             </div>
@@ -245,21 +262,112 @@ const SprintTab = ({ profile, user }: { profile: any, user: any }) => {
         </div>
       </motion.div>
 
+      {/* Rich Brief & Teammate Roster */}
+      <div className="grid lg:grid-cols-4 gap-6">
+        {/* Project Brief */}
+        <div className="lg:col-span-3 bg-card border border-border/50 rounded-xl p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Code2 className="w-5 h-5 text-primary" /> Project Brief & Architecture
+          </h3>
+          {team.problem ? (
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">The Problem</h4>
+                <p className="text-sm text-foreground leading-relaxed">{team.problem}</p>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Expected Outcome</h4>
+                  <p className="text-sm text-foreground leading-relaxed">{team.expectedOutcome}</p>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Success Criteria</h4>
+                  <p className="text-sm text-foreground leading-relaxed">{team.successCriteria}</p>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Required Stack</h4>
+                <div className="flex flex-wrap gap-2">
+                  {team.techStack?.map((tech: string) => (
+                    <span key={tech} className="px-2.5 py-1 rounded-md bg-secondary text-xs font-medium text-foreground border border-border/50 shadow-sm">{tech}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">Legacy project format. Brief not generated.</p>
+          )}
+        </div>
+
+        {/* Teammate Roster */}
+        <div className="lg:col-span-1 bg-card border border-border/50 rounded-xl p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" /> Team Roster
+          </h3>
+          <div className="space-y-4">
+            {(team.memberDetails || []).length > 0 ? (
+              team.memberDetails.map((member: any, i: number) => (
+                <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/40 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold shadow-sm">
+                    {member.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground truncate w-[90px] md:w-[120px]">{member.name}</p>
+                    <p className="text-[10px] font-mono font-medium text-muted-foreground tracking-tight">{member.role}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Fallback for legacy formatted teams before memberDetails existed
+              team.memberNames?.map((name: string, i: number) => {
+                const roles = ["Frontend Architect", "Backend Systems", "Full-Stack Maker", "Design & Ops"];
+                const role = roles[i % roles.length];
+                return (
+                  <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/40 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold shadow-sm">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground truncate w-[90px] md:w-[120px]">{name}</p>
+                      <p className="text-[10px] font-mono font-medium text-muted-foreground tracking-tight">{role}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-5 gap-6">
         {/* Task Board */}
         <div className="lg:col-span-3 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-foreground text-sm">Task Board</h3>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setShowTaskModal(true)} variant="outline" size="sm" className="h-7 text-[10px] uppercase font-bold px-2">
-                Add Task
-              </Button>
-              <GitBranch className="w-3 h-3 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-mono">main · synced</span>
+          <div className="bg-card border border-border/50 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-foreground text-sm tracking-tight mb-1">Task Pipeline</h3>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                <GitBranch className="w-3.5 h-3.5" />
+                <span>main · continuously integrated</span>
+              </div>
             </div>
+            
+            <form 
+              onSubmit={(e) => { e.preventDefault(); addTask(); }}
+              className="flex items-center gap-2 w-full md:w-auto"
+            >
+              <input
+                value={newTask.title}
+                onChange={e => setNewTask({...newTask, title: e.target.value})}
+                placeholder="Quick add task..."
+                className="flex-1 md:w-48 bg-secondary/50 border border-border/50 text-sm px-3 py-1.5 rounded-md focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground"
+              />
+              <Button type="submit" size="sm" className="bg-foreground text-background font-medium h-8 rounded-md px-3 shadow-sm">
+                Add
+              </Button>
+            </form>
           </div>
 
-          {["in-progress", "todo", "done"].map(status => {
+          {["todo", "in-progress", "done"].map(status => {
             const statusTasks = tasks.filter(t => t.status === status);
             const label = status === "in-progress" ? "In Progress" : status === "todo" ? "To Do" : "Done";
             return (
@@ -353,38 +461,57 @@ const SprintTab = ({ profile, user }: { profile: any, user: any }) => {
           </div>
         </div>
       </div>
-      {showTaskModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass w-full max-w-md p-6 rounded-2xl relative border-primary/20 shadow-2xl">
-            <h3 className="text-lg font-bold mb-4">Forge New Task</h3>
-            <div className="space-y-4">
-              <input 
-                placeholder="Task description..." 
-                className="w-full bg-secondary/30 border border-border/50 rounded-lg p-3 text-sm outline-none focus:ring-1 ring-primary transition-all"
-                value={newTask.title}
-                onChange={e => setNewTask({...newTask, title: e.target.value})}
-              />
+      {/* Submission Modal */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass w-full max-w-lg p-8 rounded-3xl border-primary/20 shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <Rocket className="w-32 h-32" />
+            </div>
+            
+            <h3 className="text-2xl font-black text-foreground mb-1">Final Mission Report</h3>
+            <p className="text-xs text-muted-foreground mb-8 uppercase font-bold tracking-widest">Submit your Forge product to the community</p>
+
+            <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase font-bold text-muted-foreground">Priority</label>
-                <div className="flex gap-2">
-                  {["low", "medium", "high"].map(p => (
-                    <button
-                      key={p}
-                      onClick={() => setNewTask({...newTask, priority: p})}
-                      className={`flex-1 py-1.5 rounded-lg text-[10px] uppercase font-bold border transition-all ${
-                        newTask.priority === p 
-                          ? "bg-primary/20 border-primary text-primary shadow-glow" 
-                          : "bg-secondary/40 border-border/50 text-muted-foreground"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
+                <label className="text-[10px] uppercase font-black text-muted-foreground ml-1">Live Deployment URL (Vercel/Render)</label>
+                <input 
+                  value={submissionData.deployUrl}
+                  onChange={e => setSubmissionData({...submissionData, deployUrl: e.target.value})}
+                  className="w-full bg-secondary/30 border border-border/50 rounded-xl p-3 text-sm focus:ring-1 ring-primary outline-none transition-all"
+                  placeholder="https://neuro-mesh.vercel.app"
+                />
               </div>
-              <div className="flex gap-3 pt-2">
-                <Button onClick={() => setShowTaskModal(false)} variant="ghost" className="flex-1">Cancel</Button>
-                <Button onClick={addTask} className="flex-1 bg-primary font-bold shadow-glow">Add Objective</Button>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-black text-muted-foreground ml-1">The Approach (How did you build it?)</label>
+                <textarea 
+                  value={submissionData.approaches}
+                  onChange={e => setSubmissionData({...submissionData, approaches: e.target.value})}
+                  className="w-full bg-secondary/30 border border-border/50 rounded-xl p-3 text-sm focus:ring-1 ring-primary outline-none transition-all min-h-[100px] resize-none"
+                  placeholder="e.g. We implemented a decentralized node map using CRDTs to manage state..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-black text-muted-foreground ml-1">The Challenges (What blocked you?)</label>
+                <textarea 
+                  value={submissionData.challenges}
+                  onChange={e => setSubmissionData({...submissionData, challenges: e.target.value})}
+                  className="w-full bg-secondary/30 border border-border/50 rounded-xl p-3 text-sm focus:ring-1 ring-primary outline-none transition-all min-h-[100px] resize-none"
+                  placeholder="e.g. Dealing with network jitter during multi-node synchronization was tricky..."
+                />
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button variant="ghost" className="flex-1 rounded-xl h-12 font-bold uppercase text-xs" onClick={() => setShowSubmitModal(false)}>Back to Forge</Button>
+                <Button 
+                  disabled={submitting}
+                  onClick={handleFinalSubmission}
+                  className="flex-1 bg-primary text-primary-foreground rounded-xl h-12 font-black uppercase text-xs shadow-glow hover:glow-primary"
+                >
+                  {submitting ? "Verifying Commits..." : "Transmit Project"}
+                </Button>
               </div>
             </div>
           </motion.div>

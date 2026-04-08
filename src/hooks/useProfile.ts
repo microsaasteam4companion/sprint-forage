@@ -16,6 +16,7 @@ export interface UserProfile {
   registeredForNextSprint: boolean;
   isVerified: boolean;
   isAdmin: boolean;
+  [key: string]: any;
 }
 
 export const useProfile = () => {
@@ -47,6 +48,9 @@ export const useProfile = () => {
           registeredForNextSprint: data.registeredForNextSprint || false,
           isVerified: data.isVerified || false,
           isAdmin: data.isAdmin || false,
+          lastSprintStartedAt: data.lastSprintStartedAt || null,
+          completedProjectDates: data.completedProjectDates || [],
+          ...data // Include any other dynamic properties
         });
       }
       setLoading(false);
