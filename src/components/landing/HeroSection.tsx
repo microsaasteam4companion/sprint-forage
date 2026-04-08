@@ -41,7 +41,7 @@ const HeroSection = () => {
               className="text-lg text-muted-foreground max-w-xl mb-10 leading-relaxed"
             >
               Forced collaboration with strangers. Weekly projects. Real deadlines.
-              Build your portfolio the way the real world works — with people you didn't pick.
+              Build your portfolio the way the real world works | with people you didn't pick.
             </motion.p>
 
             <motion.div

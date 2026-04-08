@@ -5,7 +5,7 @@ const steps = [
   {
     icon: UserPlus,
     title: "Register & Set Skills",
-    description: "Sign up and tag your expertise — frontend, backend, DevOps, design. The system knows what you bring.",
+    description: "Sign up and tag your expertise: frontend, backend, DevOps, design. The system knows what you bring.",
     color: "text-primary",
   },
   {

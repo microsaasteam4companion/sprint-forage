@@ -5,7 +5,7 @@ const features = [
   {
     icon: Ghost,
     title: "Anonymous Identity",
-    description: "Everyone starts anonymous. Your code speaks first. Real identity unlocks at high Karma — earned, not given.",
+    description: "Everyone starts anonymous. Your code speaks first. Real identity unlocks at high Karma | earned, not given.",
     gradient: "from-primary/20 to-primary/5",
   },
   {

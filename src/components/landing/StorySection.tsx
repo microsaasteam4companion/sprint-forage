@@ -21,7 +21,7 @@ const storySteps = [
   },
   {
     icon: "⚡",
-    title: "Monday — Friday",
+    title: "Monday - Friday",
     subtitle: "The Build Sprint",
     description: "5 days. 3 strangers. 1 project: Build a real-time chat app. You handle the API, she handles the UI, he handles the database. Sink or swim together.",
     visual: "SPRINT IN PROGRESS",
