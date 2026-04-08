@@ -11,6 +11,17 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// --- ENVIRONMENT GUARD ---
+// This check blocks the app from initializing if the environment variables 
+// are still using placeholders from the .env.example file.
+Object.entries(firebaseConfig).forEach(([key, value]) => {
+  if (!value || value.includes("your_firebase") || value === "undefined") {
+    console.error(`🔥 FIREBASE CONFIG ERROR: The ${key} is missing or invalid.`);
+    throw new Error(`CRITICAL: Firebase ${key} is not configured on the hosting provider.`);
+  }
+});
+// -------------------------
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
