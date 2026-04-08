@@ -13,6 +13,7 @@ import Contact from "./pages/Contact.tsx";
 import BlogList from "./pages/BlogList.tsx";
 import BlogPost from "./pages/BlogPost.tsx";
 
+// Environment heartbeat - Forces fresh build to pick up new variables
 const queryClient = new QueryClient();
 
 const App = () => (
